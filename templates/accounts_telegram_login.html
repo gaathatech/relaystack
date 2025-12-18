@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+<head>
+  <title>Telegram Login — RelayStack</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h2>Telegram Login for account: {{ account_id }}</h2>
+    <form method="post" action="{{ url_for('accounts_telegram_send_code', provider=provider, account_id=account_id) }}">
+      <label>Phone number (international format):</label><br>
+      <input name="phone" placeholder="e.g. +919876543210" />
+      <button type="submit">Send Code</button>
+    </form>
+
+    <p class="small">Make sure you have access to this phone to receive code via SMS or Telegram.</p>
+    {% include '_footer.html' %}
+  </div>
+</body>
+</html>

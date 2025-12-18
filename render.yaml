@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: relaystack
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SESSION_KEY
+        value: # set as secret in Render dashboard
+      - key: TELEGRAM_API_ID
+        value: # set in dashboard
+      - key: TELEGRAM_API_HASH
+        value: # set in dashboard
+      - key: TELEGRAM_BOT_TOKEN
+        value: # set in dashboard if using bot functionality
+      - key: RATE_LIMIT_PER_MIN
+        value: "60"
+    # If you'd like a persistent disk for sessions/user_data, configure it in the Render dashboard and mount it to /app

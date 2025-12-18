@@ -1,0 +1,9 @@
+Flask>=2.0
+selenium>=4.0
+openpyxl>=3.0
+webdriver-manager>=4.0
+requests>=2.0
+telethon>=1.29
+cryptography>=40.0
+kivy; extra == 'kivy'
+pytest>=7.0

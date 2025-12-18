@@ -43,6 +43,8 @@ def init_driver_for_profile(provider: str, account_id: str, wait_for_login=True,
     options.add_argument(f'--user-data-dir={profile_dir}')
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
 
     chromedriver_path = os.environ.get('CHROMEDRIVER_PATH')
     if chromedriver_path:

@@ -1,49 +1,127 @@
 <!doctype html>
-<html>
-  <head>
+<html lang="en">
+<head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}RelayStack{% endblock %}</title>
-  <!-- Bootstrap 5 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH6mKjW5Q2QGq3+8g5q2i1V9Z0K1yQ5a6r7Zx1u6VYlJpQw5K6a9z1v3u2F5e6cR" crossorigin="anonymous">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta name="description" content="WhatsApp automation platform with QR login and message relay.">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <div class="container py-4">
-    <header class="d-flex justify-content-between align-items-center mb-3">
-      <div class="d-flex align-items-center">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="rounded me-3" style="width:48px;height:48px;">
-        <div>
-          <h1 class="h4 mb-0">RelayStack</h1>
-          <div class="small text-muted">Nexora • WhatsApp automation</div>
+  <!-- Header -->
+  <header class="header-top">
+    <div class="container-fluid">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <div class="header-brand">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="RelayStack">
+            <div>
+              <div>RelayStack</div>
+              <span>WhatsApp Automation</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 text-end">
+          {% if session.get('user') %}
+            <small style="color: rgba(255,255,255,0.8);">
+              <i class="bi bi-person-circle"></i>
+              Logged in as: <strong>{{ session.get('user') }}</strong>
+            </small>
+          {% endif %}
         </div>
       </div>
-      <div class="d-flex align-items-center gap-3">
-        {% if session.get('user') %}
-          <div class="small">Welcome, <strong>{{ session.get('user') }}</strong></div>
-          {% if session.get('user') == 'admin' %}
-            <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary btn-sm">Admin</a>
+    </div>
+  </header>
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand d-lg-none" href="/">
+        <i class="bi bi-app-indicator"></i> RelayStack
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          {% if session.get('user') %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}"><i class="bi bi-house"></i> Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('accounts') }}"><i class="bi bi-chat-dots"></i> Accounts</a></li>
+            {% if session.get('user') == 'admin' %}
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin') }}"><i class="bi bi-shield-lock"></i> Admin</a></li>
+            {% endif %}
+            <li class="nav-item dropdown ms-2">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                <i class="bi bi-person-circle"></i> Settings
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+              </ul>
+            </li>
+          {% else %}
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for('signup') }}"><i class="bi bi-person-plus"></i> Sign up</a></li>
           {% endif %}
-          <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary btn-sm">Logout</a>
-        {% else %}
-          <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Login</a>
-          <a href="{{ url_for('signup') }}" class="btn btn-outline-primary btn-sm">Sign up</a>
-        {% endif %}
+        </ul>
       </div>
-    </header>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for cat, msg in messages %}
-          <div class="note">{{ msg }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    {% block content %}{% endblock %}
-
-    {% include '_footer.html' %}
+    </div>
+  </nav>
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+              <i class="bi bi-exclamation-circle"></i> {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </div>
   </div>
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 footer-section">
+          <h6>About RelayStack</h6>
+          <p>
+            RelayStack is a WhatsApp automation platform for sending messages and managing accounts with QR-based login.
+          </p>
+          <p><strong>Version:</strong> 1.0</p>
+        </div>
+        <div class="col-md-4 footer-section">
+          <h6>Project</h6>
+          <p>
+            Open-source WhatsApp automation tool.<br>
+            Built with Flask and Selenium.
+          </p>
+        </div>
+        <div class="col-md-4 footer-section">
+          <h6>Contact & Support</h6>
+          <p>
+            <i class="bi bi-envelope"></i>
+            <a href="mailto:support@relaystack.com">support@relaystack.com</a>
+          </p>
+          <p>
+            <i class="bi bi-github"></i>
+            Support via GitHub issues
+          </p>
+        </div>
+      </div>
+      <div class="footer-divider"></div>
+      <div class="copyright">
+        <p>&copy; 2025 RelayStack. All rights reserved.</p>
+        <p style="margin-top: 8px; font-size: 11px;">RelayStack | WhatsApp Automation Platform</p>
+      </div>
+    </div>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -45,7 +45,7 @@ def init_driver_for_profile(provider: str, account_id: str, wait_for_login=True,
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--headless')
     options.add_argument('--disable-gpu')
-    options.add_argument('--window-size=1920,1080')
+    options.add_argument('--window-size=800,600')
     options.add_argument('--remote-debugging-port=9222')
     options.add_argument('--disable-extensions')
     options.add_argument('--disable-background-timer-throttling')

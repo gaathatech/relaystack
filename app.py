@@ -143,7 +143,7 @@ sending_thread = None
 stop_flag = False
 
 
-def background_send(numbers, message, log_path, preserve_session=False, provider='whatsapp', account_id='default'):
+def background_send(numbers, message, log_path, preserve_session=False, provider='whatsapp', account_id='default', consent=False):
     """Background sending loop used by the Flask UI.
 
     Supports multiple providers. `provider` selects which send function to call.
@@ -158,7 +158,7 @@ def background_send(numbers, message, log_path, preserve_session=False, provider
                 logging.info("Sending stopped by user.")
                 break
             # Enforce consent for WhatsApp user-account sending
-            if not request.form.get('consent') and provider == 'whatsapp':
+            if not consent and provider == 'whatsapp':
                 logging.warning('Consent not provided; aborting')
                 break
             # Rate limit per account
@@ -237,7 +237,8 @@ def index():
             return render_template('index.html', uploaded=False, error="❌ Please paste numbers and enter a message.")
 
         # Consent check
-        if not request.form.get('consent'):
+        consent = request.form.get('consent') == 'on'
+        if not consent:
             return render_template('index.html', uploaded=False, error="❌ You must confirm recipient consent before sending messages.")
 
         numbers = [clean_number(num.strip()) for num in numbers_raw.split('\n') if num.strip()]
@@ -256,7 +257,7 @@ def index():
         if not allow_send(provider, account_id, count=len(numbers)):
             return render_template('index.html', uploaded=False, error=f"⚠️ Rate limit exceeded for account {account_id}. Try later.")
 
-        sending_thread = threading.Thread(target=background_send, args=(numbers, message, log_path, preserve_session, provider, account_id))
+        sending_thread = threading.Thread(target=background_send, args=(numbers, message, log_path, preserve_session, provider, account_id, consent))
         sending_thread.start()
 
         logging.info('Started background sending thread for %d numbers', len(numbers))
@@ -403,19 +404,20 @@ def accounts_create():
 @app.route('/accounts/<provider>/<account_id>/start_login')
 @login_required
 def accounts_start_login(provider, account_id):
-    if provider == 'whatsapp':
-        try:
-            # Return a page showing the current WhatsApp Web screenshot (contains the QR if not logged in)
-            png = sender.get_login_screenshot(provider, account_id, timeout=10)
-            if png:
-                import base64
-                data = base64.b64encode(png).decode()
-                img_data = f"data:image/png;base64,{data}"
-                return render_template('accounts_qr.html', provider=provider, account_id=account_id, qr_image=img_data)
-        except Exception:
-            logging.exception('Failed to start login flow for %s/%s', provider, account_id)
-        # Fallback
+    if provider != 'whatsapp':
         return redirect(url_for('accounts_list'))
+    try:
+        # Return a page showing the current WhatsApp Web screenshot (contains the QR if not logged in)
+        png = sender.get_login_screenshot(provider, account_id, timeout=10)
+        if png:
+            import base64
+            data = base64.b64encode(png).decode()
+            img_data = f"data:image/png;base64,{data}"
+            return render_template('accounts_qr.html', provider=provider, account_id=account_id, qr_image=img_data)
+    except Exception:
+        logging.exception('Failed to start login flow for %s/%s', provider, account_id)
+    # Fallback
+    return redirect(url_for('accounts_list'))
 
 
 @app.route('/accounts/telegram/<account_id>/send_code', methods=['POST'])

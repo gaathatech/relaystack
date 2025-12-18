@@ -45,6 +45,12 @@ def init_driver_for_profile(provider: str, account_id: str, wait_for_login=True,
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--headless')
     options.add_argument('--disable-gpu')
+    options.add_argument('--window-size=1920,1080')
+    options.add_argument('--remote-debugging-port=9222')
+    options.add_argument('--disable-extensions')
+    options.add_argument('--disable-background-timer-throttling')
+    options.add_argument('--disable-backgrounding-occluded-windows')
+    options.add_argument('--disable-renderer-backgrounding')
 
     chromedriver_path = os.environ.get('CHROMEDRIVER_PATH')
     if chromedriver_path:

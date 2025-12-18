@@ -7,3 +7,4 @@ telethon>=1.29
 cryptography>=40.0
 kivy; extra == 'kivy'
 pytest>=7.0
+gunicorn>=20.0

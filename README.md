@@ -69,6 +69,14 @@ If you'd like to deploy to Render, this repo includes a `Dockerfile`, `run.sh`, 
 
 See `Dockerfile`, `run.sh` and `render.yaml` for the deployment setup. Tell me if you want me to add a `docker-compose.yml` for local Docker testing or set up a Render persistent disk example and I will add it.
 
+### Troubleshooting common deploy errors ⚠️
+
+- If you see `/app/run.sh: line X: exec: gunicorn: not found` during deploy, it means Gunicorn wasn't available in the container's Python environment. Fixes:
+  - Ensure `gunicorn` is present in `requirements.txt` (this repo includes `gunicorn>=20.0`).
+  - Alternatively the entrypoint now uses `python -m gunicorn` which runs the module under the container Python interpreter.
+  - Re-deploy after updating `requirements.txt` so Render installs the new dependency.
+
+
 ## Contributing
 PRs welcome. Please ensure you do not include real user data in commits.
 

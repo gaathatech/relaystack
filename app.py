@@ -141,6 +141,7 @@ def accounts_qr_image(provider, account_id):
 
 sending_thread = None
 stop_flag = False
+sending_status = {'active': False, 'progress': '', 'log_file': ''}
 
 
 def background_send(numbers, message, log_path, preserve_session=False, provider='whatsapp', account_id='default', consent=False):
@@ -152,6 +153,15 @@ def background_send(numbers, message, log_path, preserve_session=False, provider
     stop_flag = False
 
     if provider == 'whatsapp':
+        # Prepare Excel workbook for logging
+        import openpyxl
+        from datetime import datetime
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "WhatsApp Logs"
+        ws.append(['Phone Number', 'Status', 'Timestamp', 'Account'])
+        wb.save(log_path)
+
         from ratelimit import consume
         for i, number in enumerate(numbers):
             if stop_flag:
@@ -165,15 +175,25 @@ def background_send(numbers, message, log_path, preserve_session=False, provider
             if not consume('whatsapp', account_id, 1):
                 logging.warning('Rate limit exceeded for %s/%s', provider, account_id)
                 # Append failed reason to log
-                import openpyxl
-                wb = openpyxl.load_workbook(log_path) if os.path.exists(log_path) else openpyxl.Workbook()
+                wb = openpyxl.load_workbook(log_path)
                 ws = wb.active
                 ws.append([number, 'Rate limited', datetime.now().strftime('%Y-%m-%d %H:%M:%S'), account_id])
                 wb.save(log_path)
                 continue
 
+            # Send the message
+            sender.send_whatsapp_messages_with_log([number], message, log_path, append=True, account_id=account_id)
+
+            # Update progress
+            global sending_status
+            sending_status['progress'] = f"Sent {i+1}/{len(numbers)}"
+
         # Close driver and optionally preserve the session
         sender.close_driver(preserve_session=bool(preserve_session))
+
+        # Mark as completed
+        sending_status['active'] = False
+        sending_status['progress'] = 'Completed'
 
     elif provider == 'telegram':
         # Prefer user-account Telegram if a session exists for the account_id
@@ -252,6 +272,11 @@ def index():
         if sending_thread and sending_thread.is_alive():
             return render_template('index.html', uploaded=False, error="⚠️ Sending already in progress...")
 
+        # Check if WhatsApp account is logged in
+        from sender import check_whatsapp_logged_in
+        if not check_whatsapp_logged_in(provider=provider, account_id=account_id):
+            return render_template('index.html', uploaded=False, error="❌ WhatsApp account not logged in. Please log in first via Accounts page.")
+
         # Rate limiting per account
         from rate_limiter import allow_send
         if not allow_send(provider, account_id, count=len(numbers)):
@@ -259,6 +284,9 @@ def index():
 
         sending_thread = threading.Thread(target=background_send, args=(numbers, message, log_path, preserve_session, provider, account_id, consent))
         sending_thread.start()
+
+        global sending_status
+        sending_status = {'active': True, 'progress': 'Starting...', 'log_file': log_filename}
 
         logging.info('Started background sending thread for %d numbers', len(numbers))
         return render_template('index.html', uploaded=True, count=len(numbers), log_file=log_filename, status="✅ Sending started...")
@@ -361,6 +389,13 @@ def whatsapp_status():
     except Exception as e:
         logging.exception('Failed to check whatsapp status')
         return { 'ready': False, 'error': str(e) }
+
+
+@app.route('/status/sending')
+@login_required
+def sending_status_route():
+    global sending_status
+    return sending_status
 
 
 @app.route('/accounts')

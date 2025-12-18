@@ -83,6 +83,11 @@
         document.addEventListener('DOMContentLoaded', function(){ updateStatus(); setInterval(updateStatus, 5000); });
         </script>
 
+        <div style="margin-top:8px">
+            <span id="sending-status" class="badge"></span>
+        </div>
+        <script src="/static/js/sending_status.js"></script>
+
         {% if uploaded %}
             <div class="status">{{ status or 'Status: Sending in background' }}
                 <div class="download-link"><a href="{{ url_for('static', filename='logs/' + log_file) }}" download>📥 Download Message Log (Excel)</a></div>

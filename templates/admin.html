@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard — RelayStack{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-body">
+      <h2 class="card-title h5">Admin Dashboard</h2>
+
+      <h3>Users</h3>
+      <ul class="list-group mb-3">
+        {% for user in users %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ user }}
+            {% if user != 'admin' %}
+              <form method="post" action="{{ url_for('admin_delete_user', username=user) }}" class="d-inline">
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete user?')">Delete</button>
+              </form>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+
+      <h3>Accounts</h3>
+      <ul class="list-group">
+        {% for acc in accounts %}
+          <li class="list-group-item">{{ acc.provider }} / {{ acc.account_id }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endblock %}

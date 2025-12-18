@@ -1,35 +1,39 @@
-<!doctype html>
-<html>
-<head>
-  <title>Accounts — RelayStack</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-  <div class="container">
-    <h2>Accounts</h2>
-    <form method="post" action="/accounts/create" style="margin-bottom:12px; display:flex; gap:8px">
-      <select name="provider">
-        <option value="whatsapp">WhatsApp</option>
-      </select>
-      <input name="account_id" placeholder="account name (e.g., personal)" />
-      <button type="submit">Create Account Slot</button>
-    </form>
+{% extends 'base.html' %}
 
-    {% if accounts %}
-      <ul>
-        {% for acc in accounts %}
-          <li>{{ acc.provider }} / <strong>{{ acc.account_id }}</strong>
-            &nbsp; <a href="/accounts/{{ acc.provider }}/{{ acc.account_id }}/start_login">Start login (open QR)</a>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="small">No accounts created yet. Create one above then click &ldquo;Start login&rdquo; to scan QR.</p>
-    {% endif %}
+{% block title %}Accounts — RelayStack{% endblock %}
 
-    <p class="small">Sessions are stored locally in the server and should be encrypted in production.</p>
+{% block content %}
+  <div class="card">
+    <div class="card-body">
+      <h2 class="card-title h5">Accounts</h2>
+      <form method="post" action="/accounts/create" class="row g-2 align-items-center mb-3">
+        <div class="col-auto">
+          <select class="form-select" name="provider">
+            <option value="whatsapp">WhatsApp</option>
+          </select>
+        </div>
+        <div class="col">
+          <input class="form-control" name="account_id" placeholder="account name (e.g., personal)" />
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-primary" type="submit">Create Account Slot</button>
+        </div>
+      </form>
 
-    {% include '_footer.html' %}
+      {% if accounts %}
+        <ul class="list-group">
+          {% for acc in accounts %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>{{ acc.provider }} / <strong>{{ acc.account_id }}</strong></div>
+              <a class="btn btn-sm btn-outline-secondary" href="/accounts/{{ acc.provider }}/{{ acc.account_id }}/start_login">Start login (open QR)</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="small">No accounts created yet. Create one above then click “Start login” to scan QR.</p>
+      {% endif %}
+
+      <p class="small mt-3">Sessions are stored locally in the server and should be encrypted in production.</p>
+    </div>
   </div>
-</body>
-</html>
+{% endblock %}

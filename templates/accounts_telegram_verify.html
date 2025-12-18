@@ -1,20 +1,17 @@
-<!doctype html>
-<html>
-<head>
-  <title>Telegram Verify — RelayStack</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-  <div class="container">
-    <h2>Enter Code for {{ account_id }}</h2>
-    <form method="post" action="{{ url_for('accounts_telegram_verify', provider=provider, account_id=account_id) }}">
-      <label>Code:</label><br>
-      <input name="code" placeholder="12345" />
-      <button type="submit">Verify & Save Session</button>
-    </form>
+{% extends 'base.html' %}
 
-    <p class="small">If your account has 2FA enabled and asks for a password this UI currently does not support entering password; please use CLI or contact admin.</p>
-    {% include '_footer.html' %}
-  </div>
-</body>
-</html>
+{% block title %}Telegram Verify — {{ account_id }}{% endblock %}
+
+{% block content %}
+  <h2 class="h5">Enter Code for {{ account_id }}</h2>
+  <form method="post" action="{{ url_for('accounts_telegram_verify', provider=provider, account_id=account_id) }}" class="row g-2 align-items-center">
+    <div class="col">
+      <input class="form-control" name="code" placeholder="12345" />
+    </div>
+    <div class="col-auto">
+      <button class="btn btn-primary" type="submit">Verify & Save Session</button>
+    </div>
+  </form>
+
+  <p class="small mt-3">If your account has 2FA enabled and asks for a password this UI currently does not support entering password; please use CLI or contact admin.</p>
+{% endblock %}

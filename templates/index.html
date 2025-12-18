@@ -1,119 +1,102 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>RelayStack — WhatsApp Bulk Messaging</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-</head>
-<body>
-    <div class="container">
-        <header>
-            <div class="brand">
-                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="width:40px;height:40px;border-radius:6px;display:inline-block">
-                <h1>RelayStack</h1>
-            </div>
-            <div class="small">Nexora • WhatsApp automation</div>
-        </header>
-        <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
+{% extends 'base.html' %}
 
-        {% if error %}
-            <div class="note">❌ {{ error }}</div>
-        {% endif %}
+{% block title %}RelayStack — WhatsApp Bulk Messaging{% endblock %}
 
-        <div class="form-row">
-            <div class="form-col">
-                <label>Paste Numbers (one per line):</label>
-                <textarea name="numbers" rows="12" placeholder="e.g. 919876543210">{{ request.form.get('numbers','') }}</textarea>
-                
-                {%- if request.form.get('provider','whatsapp') == 'whatsapp' %}
-                <label style="margin-top:8px">Select WhatsApp account</label>
-                <select name="account_id" style="margin-bottom:10px;padding:8px;border-radius:6px;border:1px solid #e2e8f0;">
-                    {% for acc in (accounts or []) %}
-                        <option value="{{ acc.account_id }}" {% if request.form.get('account_id','default')==acc.account_id %}selected{% endif %}>{{ acc.account_id }}</option>
-                    {% endfor %}
-                    <option value="default" {% if request.form.get('account_id','default')=='default' %}selected{% endif %}>default</option>
-                </select>
-                {%- endif %}
-            </div>
-            <div class="form-col">
-                <label>Platform / Provider:</label>
-                <select name="provider" style="margin-bottom:10px;padding:8px;border-radius:6px;border:1px solid #e2e8f0;">
-                    <option value="whatsapp" {% if request.form.get('provider','whatsapp')=='whatsapp' %}selected{% endif %}>WhatsApp (default)</option>
-                    <option value="telegram" {% if request.form.get('provider')=='telegram' %}selected{% endif %}>Telegram (bot - implemented)</option>
-                    <option value="viber" {% if request.form.get('provider')=='viber' %}selected{% endif %}>Viber (not implemented)</option>
-                    <option value="errattai" {% if request.form.get('provider')=='errattai' %}selected{% endif %}>Errattai (not implemented)</option>
-                </select>
+{% block content %}
+  {% if error %}
+    <div class="note">❌ {{ error }}</div>
+  {% endif %}
 
-                <div style="margin-top:8px;font-size:13px">
-                    <a href="/accounts">Manage accounts</a> &middot; Create an account and click "Start login" to open WhatsApp Web QR for that profile.
+    <form method="post">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <label class="form-label">Paste Numbers (one per line):</label>
+                    <textarea class="form-control" name="numbers" rows="12" placeholder="e.g. 919876543210">{{ request.form.get('numbers','') }}</textarea>
                 </div>
 
-                <label>Message:</label>
-                <textarea name="message" rows="6" placeholder="Type your message here...">{{ request.form.get('message','') }}</textarea>
-                <div style="margin-top:10px; display:flex; gap:8px; align-items:center">
-                    <button name="action" value="Start" type="submit">Start Sending</button>
-                    <button class="secondary" name="action" value="Stop" type="submit">Stop Sending</button>
+        {%- if request.form.get('provider','whatsapp') == 'whatsapp' %}
+        <div class="mb-2">
+          <label class="form-label">Select WhatsApp account</label>
+          <select class="form-select" name="account_id">
+              {% for acc in (accounts or []) %}
+                  <option value="{{ acc.account_id }}" {% if request.form.get('account_id','default')==acc.account_id %}selected{% endif %}>{{ acc.account_id }}</option>
+              {% endfor %}
+              <option value="default" {% if request.form.get('account_id','default')=='default' %}selected{% endif %}>default</option>
+          </select>
+        </div>
+        {%- endif %}
+      </div>
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <label class="form-label">Platform / Provider:</label>
+                    <select class="form-select" name="provider">
+                            <option value="whatsapp" selected>WhatsApp (default)</option>
+                    </select>
                 </div>
 
-                <div style="margin-top:8px; display:flex; gap:8px; align-items:center">
-                    <label style="display:flex; gap:8px; align-items:center; font-size:13px;">
-                        <input type="checkbox" id="preserve_session" name="preserve_session" {% if request.form.get('preserve_session') %}checked{% endif %}> Preserve WhatsApp session after send
-                    </label>
+                <div class="mb-2 small text-muted"> 
+                        <a href="/accounts">Manage accounts</a> &middot; Create an account and click "Start login" to open WhatsApp Web QR for that profile.
                 </div>
 
-                <div style="margin-top:8px; display:flex; gap:8px; align-items:center">
-                    <label style="display:flex; gap:8px; align-items:center; font-size:13px;">
-                        <input type="checkbox" id="consent" name="consent"> I confirm I have consent to message these recipients
-                    </label>
+                <div class="mb-2">
+                    <label class="form-label">Message:</label>
+                    <textarea class="form-control" name="message" rows="6" placeholder="Type your message here...">{{ request.form.get('message','') }}</textarea>
                 </div>
 
-                <div style="margin-top:8px; display:flex; gap:8px; align-items:center">
-                    <label style="display:flex; gap:8px; align-items:center; font-size:13px;">
-                        <input type="checkbox" id="consent" name="consent" {% if request.form.get('consent') %}checked{% endif %}> I confirm I have consent from recipients to receive messages
-                    </label>
+                <div class="d-flex gap-2 align-items-center">
+                        <button name="action" value="Start" type="submit" class="btn btn-success">Start Sending</button>
+                        <button class="btn btn-outline-secondary" name="action" value="Stop" type="submit">Stop Sending</button>
                 </div>
 
-                <div style="margin-top:12px">
-                    <div id="whatsapp-status" class="badge disconnected">WhatsApp: checking…</div>
-                </div>
-
-                <script>
-                function updateStatus(){
-                    fetch('/status/whatsapp').then(r => r.json()).then(data => {
-                        const el = document.getElementById('whatsapp-status');
-                        if(data.ready){
-                            el.textContent = 'WhatsApp: Ready';
-                            el.className = 'badge connected';
-                        } else {
-                            el.textContent = 'WhatsApp: Not ready';
-                            el.className = 'badge disconnected';
-                        }
-                    }).catch(err => {
-                        const el = document.getElementById('whatsapp-status');
-                        el.textContent = 'WhatsApp: Error';
-                        el.className = 'badge disconnected';
-                    });
-                }
-                document.addEventListener('DOMContentLoaded', function(){ updateStatus(); setInterval(updateStatus, 5000); });
-                </script>
-
-                {% if uploaded %}
-                    <div class="status">{{ status or 'Status: Sending in background' }}
-                        <div class="download-link"><a href="{{ url_for('static', filename='logs/' + log_file) }}" download>📥 Download Message Log (Excel)</a></div>
-                    </div>
-                {% elif status %}
-                    <div class="status">{{ status }}</div>
-                {% endif %}
-
-                {%- if request.form.get('provider','whatsapp') == 'whatsapp' %}
-                    <div class="small" style="margin-top:8px;color:#b91c1c">Note: By default the app clears the WhatsApp session after the send, requiring a QR scan next time. Use the "Preserve WhatsApp session after send" checkbox above if you want to keep the session for the next run.</div>
-                {%- elif request.form.get('provider','whatsapp') != 'whatsapp' %}
-                    <div class="small" style="margin-top:8px;color:#6b7280">Note: The selected provider is not implemented yet. Choosing WhatsApp is recommended for now.</div>
-                {%- endif %}
-            </div>
+        <div class="form-check mt-3">
+            <input class="form-check-input" type="checkbox" id="preserve_session" name="preserve_session" {% if request.form.get('preserve_session') %}checked{% endif %}>
+            <label class="form-check-label" for="preserve_session">Preserve WhatsApp session after send</label>
         </div>
 
-        {% include '_footer.html' %}
+        <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" id="consent" name="consent" {% if request.form.get('consent') %}checked{% endif %}>
+            <label class="form-check-label" for="consent">I confirm I have consent from recipients to receive messages</label>
+        </div>
+
+        <div style="margin-top:12px">
+            <div id="whatsapp-status" class="badge disconnected">WhatsApp: checking…</div>
+        </div>
+
+        <script>
+        function updateStatus(){
+            fetch('/status/whatsapp').then(r => r.json()).then(data => {
+                const el = document.getElementById('whatsapp-status');
+                if(data.ready){
+                    el.textContent = 'WhatsApp: Ready';
+                    el.className = 'badge connected';
+                } else {
+                    el.textContent = 'WhatsApp: Not ready';
+                    el.className = 'badge disconnected';
+                }
+            }).catch(err => {
+                const el = document.getElementById('whatsapp-status');
+                el.textContent = 'WhatsApp: Error';
+                el.className = 'badge disconnected';
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function(){ updateStatus(); setInterval(updateStatus, 5000); });
+        </script>
+
+        {% if uploaded %}
+            <div class="status">{{ status or 'Status: Sending in background' }}
+                <div class="download-link"><a href="{{ url_for('static', filename='logs/' + log_file) }}" download>📥 Download Message Log (Excel)</a></div>
+            </div>
+        {% elif status %}
+            <div class="status">{{ status }}</div>
+        {% endif %}
+
+        {%- if request.form.get('provider','whatsapp') == 'whatsapp' %}
+            <div class="small" style="margin-top:8px;color:#b91c1c">Note: By default the app clears the WhatsApp session after the send, requiring a QR scan next time. Use the "Preserve WhatsApp session after send" checkbox above if you want to keep the session for the next run.</div>
+        {%- elif request.form.get('provider','whatsapp') != 'whatsapp' %}
+            <div class="small" style="margin-top:8px;color:#6b7280">Note: The selected provider is not implemented yet. Choosing WhatsApp is recommended for now.</div>
+        {%- endif %}
+      </div>
     </div>
-</body>
-</html>
+  </form>
+{% endblock %}

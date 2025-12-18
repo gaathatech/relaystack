@@ -73,6 +73,45 @@ def init_driver_for_profile(provider: str, account_id: str, wait_for_login=True,
     return drv
 
 
+def get_login_screenshot(provider: str, account_id: str, timeout=30):
+    """Start (or reuse) a driver for the profile and return a PNG screenshot bytes of the login/QR page.
+
+    This is a best-effort helper: it loads web.whatsapp.com and returns a PNG of the page which
+    usually contains the QR code for scanning when not logged in.
+    """
+    key = f"{provider}:{account_id}"
+    if key in _drivers:
+        drv = _drivers[key]
+    else:
+        # Do not wait for login here; we want the QR to appear if not logged in
+        drv = init_driver_for_profile(provider, account_id, wait_for_login=False)
+
+    try:
+        drv.get('https://web.whatsapp.com')
+        # Give the page some time to render the QR
+        time.sleep(min(5, timeout))
+        png = drv.get_screenshot_as_png()
+
+        # Crop to focus on QR area (center square, assuming 1080x1920 or similar)
+        from PIL import Image
+        import io
+        img = Image.open(io.BytesIO(png))
+        width, height = img.size
+        # Assume QR is in the center; crop to a square of min(width, height) centered
+        size = min(width, height)
+        left = (width - size) // 2
+        top = (height - size) // 2
+        right = left + size
+        bottom = top + size
+        cropped = img.crop((left, top, right, bottom))
+        output = io.BytesIO()
+        cropped.save(output, format='PNG')
+        return output.getvalue()
+    except Exception:
+        logging.exception('Failed to capture login screenshot for %s/%s', provider, account_id)
+        return None
+
+
 def send_whatsapp_messages_with_log(numbers, message, log_path, append=False, account_id='default'):
     # Prepare Excel workbook for logging
     if append and os.path.exists(log_path):

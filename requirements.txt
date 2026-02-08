@@ -1,11 +1,28 @@
+# Web Framework
 Flask>=2.0
-selenium>=4.0
-openpyxl>=3.0
-webdriver-manager>=4.0
-requests>=2.0
-telethon>=1.29
-cryptography>=40.0
-kivy; extra == 'kivy'
-pytest>=7.0
 gunicorn>=20.0
+
+# Data Processing
+openpyxl>=3.0
+requests>=2.0
+
+# NLP & Text Processing
+python-dateutil>=2.8.2
+
+# Scheduling & Background Tasks
+schedule>=1.1.9
+
+# PDF Generation
+weasyprint>=54.0
+reportlab>=3.6.0
+
+# Environment Configuration
+python-dotenv>=0.19.0
+
+# Testing
+pytest>=7.0
+pytest-cov>=4.0
+
+# Utilities
 Pillow>=9.0
+cryptography>=40.0

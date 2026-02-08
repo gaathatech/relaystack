@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Nexora{% endblock %}
+
+{% block content %}
+<div class="page-title"><i class="fas fa-chart-bar"></i> Analytics Dashboard</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <label class="form-label">Date Range</label>
+        <input type="number" class="form-control" id="days" value="30" min="1" placeholder="Days" onchange="loadAnalytics()">
+    </div>
+    <div class="col-md-6">
+        <button class="btn btn-success mt-4" onclick="exportJSON()"><i class="fas fa-download"></i> Export JSON</button>
+        <button class="btn btn-info mt-4" onclick="exportHTML()"><i class="fas fa-file-pdf"></i> Export HTML</button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-label">Messages Sent</div>
+            <div class="metric-value" id="totalSent">-</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-label">Delivered</div>
+            <div class="metric-value" id="totalDelivered">-</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-label">Success Rate</div>
+            <div class="metric-value" id="successRate">-</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-label">Chat Conversations</div>
+            <div class="metric-value" id="totalChats">-</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-envelope"></i> Top Campaigns</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Campaign</th>
+                                <th>Sent</th>
+                                <th>Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topCampaigns">
+                            <tr><td colspan="3" class="text-center">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-robot"></i> Chatbot Stats</h5>
+            </div>
+            <div class="card-body">
+                <div id="chatbotStats">Loading...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-star"></i> Top Questions</h5>
+            </div>
+            <div class="card-body">
+                <ol id="topQuestions">
+                    <li>Loading...</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-exclamation-triangle"></i> Unanswered Questions</h5>
+            </div>
+            <div class="card-body">
+                <ol id="unansweredQuestions">
+                    <li>Loading...</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.metric-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-bottom: 10px;
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+function loadAnalytics() {
+    const days = document.getElementById('days').value;
+    
+    axios.get(`/api/analytics/summary?days=${days}`)
+        .then(res => {
+            const s = res.data.summary;
+            document.getElementById('totalSent').textContent = s.marketing?.total_sent || 0;
+            document.getElementById('totalDelivered').textContent = s.marketing?.total_delivered || 0;
+            const rate = s.marketing?.success_rate || 0;
+            document.getElementById('successRate').textContent = rate.toFixed(1) + '%';
+            document.getElementById('totalChats').textContent = s.chatbot?.total_chats || 0;
+        });
+    
+    axios.get(`/api/analytics/detailed?days=${days}`)
+        .then(res => {
+            const d = res.data.detailed;
+            
+            // Top campaigns
+            const campaignsHtml = (d.marketing?.top_campaigns || []).map(c => `
+                <tr>
+                    <td>${c.campaign_name}</td>
+                    <td>${c.sent_count}</td>
+                    <td>${((c.delivered_count / c.sent_count) * 100).toFixed(1)}%</td>
+                </tr>
+            `).join('');
+            document.getElementById('topCampaigns').innerHTML = campaignsHtml || '<tr><td colspan="3">No data</td></tr>';
+            
+            // Chatbot stats
+            const chatStats = d.chatbot || {};
+            document.getElementById('chatbotStats').innerHTML = `
+                <p><strong>Total Conversations:</strong> ${chatStats.total_chats || 0}</p>
+                <p><strong>Unique Users:</strong> ${chatStats.unique_users || 0}</p>
+                <p><strong>Avg Confidence:</strong> ${((chatStats.average_confidence || 0) * 100).toFixed(1)}%</p>
+                <p><strong>Answered Rate:</strong> ${((chatStats.answered_rate || 0) * 100).toFixed(1)}%</p>
+            `;
+            
+            // Top questions
+            const qHtml = (d.chatbot?.top_questions || []).slice(0, 5).map((q, i) => 
+                `<li>${q.question} (${q.count}x)</li>`
+            ).join('');
+            document.getElementById('topQuestions').innerHTML = qHtml || '<li>No data</li>';
+            
+            // Unanswered questions
+            const uHtml = (d.chatbot?.unanswered_questions || []).slice(0, 5).map((q, i) =>
+                `<li>${q.question} (${q.count}x)</li>`
+            ).join('');
+            document.getElementById('unansweredQuestions').innerHTML = uHtml || '<li>All questions answered!</li>';
+        });
+}
+
+function exportJSON() {
+    const days = document.getElementById('days').value;
+    window.location.href = `/api/analytics/export-json?days=${days}`;
+}
+
+function exportHTML() {
+    const days = document.getElementById('days').value;
+    window.location.href = `/api/analytics/export-html?days=${days}`;
+}
+
+loadAnalytics();
+</script>
+{% endblock %}

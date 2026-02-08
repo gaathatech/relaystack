@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Contacts - Nexora{% endblock %}
+
+{% block content %}
+<div class="page-title"><i class="fas fa-address-book"></i> Contact Manager</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <input type="text" class="form-control" id="searchInput" placeholder="Search contacts by name or phone...">
+    </div>
+    <div class="col-md-4">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+            <i class="fas fa-upload"></i> Import Contacts
+        </button>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Company</th>
+                <th>Tags</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="contactsTable">
+            <tr><td colspan="6" class="text-center">Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Import Contacts</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="nav nav-tabs" role="tablist">
+                    <button class="nav-link active" id="textTab" data-bs-toggle="tab" data-bs-target="#textContent">Paste Numbers</button>
+                    <button class="nav-link" id="csvTab" data-bs-toggle="tab" data-bs-target="#csvContent">CSV File</button>
+                </div>
+                <div class="tab-content mt-3">
+                    <div id="textContent" class="tab-pane fade show active">
+                        <textarea class="form-control" id="textInput" rows="6" placeholder="One phone per line, or comma-separated"></textarea>
+                        <button class="btn btn-primary mt-3" onclick="importText()">Import</button>
+                    </div>
+                    <div id="csvContent" class="tab-pane fade">
+                        <input type="file" class="form-control" id="csvFile" accept=".csv">
+                        <button class="btn btn-primary mt-3" onclick="importCSV()">Import</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function loadContacts() {
+    axios.get('/api/contacts')
+        .then(res => {
+            const html = res.data.contacts.map(c => `
+                <tr>
+                    <td>${c.name}</td>
+                    <td><strong>${c.phone_number}</strong></td>
+                    <td>${c.email || '-'}</td>
+                    <td>${c.company || '-'}</td>
+                    <td>${c.tags || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteContact(${c.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('contactsTable').innerHTML = html;
+        });
+}
+
+function importText() {
+    const text = document.getElementById('textInput').value;
+    axios.post('/api/contacts/import-text', {text})
+        .then(res => {
+            alert(`Imported ${res.data.added} contacts`);
+            loadContacts();
+            document.getElementById('importModal').close();
+        });
+}
+
+function importCSV() {
+    const file = document.getElementById('csvFile').files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    axios.post('/api/contacts/import-csv', formData)
+        .then(res => {
+            alert(`Imported ${res.data.added} contacts`);
+            loadContacts();
+        });
+}
+
+function deleteContact(id) {
+    if(confirm('Delete this contact?')) {
+        axios.delete(`/api/contacts/${id}`).then(() => loadContacts());
+    }
+}
+
+loadContacts();
+
+document.getElementById('searchInput').addEventListener('keyup', (e) => {
+    const q = e.target.value;
+    if(q.length > 2) {
+        axios.get(`/api/contacts/search?q=${q}`)
+            .then(res => {
+                const html = res.data.results.map(c => `
+                    <tr>
+                        <td>${c.name}</td>
+                        <td><strong>${c.phone_number}</strong></td>
+                        <td>${c.email || '-'}</td>
+                        <td>${c.company || '-'}</td>
+                        <td>${c.tags || '-'}</td>
+                        <td><button class="btn btn-sm btn-danger" onclick="deleteContact(${c.id})"><i class="fas fa-trash"></i></button></td>
+                    </tr>
+                `).join('');
+                document.getElementById('contactsTable').innerHTML = html;
+            });
+    }
+});
+</script>
+{% endblock %}

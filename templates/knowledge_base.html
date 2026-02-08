@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Knowledge Base - Nexora{% endblock %}
+
+{% block content %}
+<div class="page-title"><i class="fas fa-book"></i> Knowledge Base Manager</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <input type="text" class="form-control" id="searchKB" placeholder="Search Q&A...">
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="categoryFilter" onchange="filterByCategory()">
+            <option value="">All Categories</option>
+            <option value="General">General</option>
+            <option value="Features">Features</option>
+            <option value="CRM">CRM</option>
+            <option value="Accounting">Accounting</option>
+            <option value="Inventory">Inventory</option>
+            <option value="Payroll">Payroll</option>
+            <option value="Projects">Projects</option>
+            <option value="Support">Support</option>
+            <option value="Payments">Payments</option>
+            <option value="Security">Security</option>
+            <option value="Account">Account</option>
+            <option value="Data">Data</option>
+            <option value="Integration">Integration</option>
+            <option value="Pricing">Pricing</option>
+            <option value="Resources">Resources</option>
+            <option value="Eligibility">Eligibility</option>
+            <option value="Comparison">Comparison</option>
+            <option value="Tools">Tools</option>
+            <option value="Jobs">Jobs</option>
+            <option value="Services">Services</option>
+            <option value="Applications">Applications</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newQAModal">
+            <i class="fas fa-plus"></i> Add Q&A
+        </button>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-light">
+            <tr>
+                <th>Question</th>
+                <th>Category</th>
+                <th>App Source</th>
+                <th>Confidence</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="kbTable">
+            <tr><td colspan="5" class="text-center">Loading...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Add/Edit Q&A Modal -->
+<div class="modal fade" id="newQAModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Q&A</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Question</label>
+                    <input type="text" class="form-control" id="qaQuestion">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Answer</label>
+                    <textarea class="form-control" id="qaAnswer" rows="4"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" id="qaCategory">
+                        <option value="General">General</option>
+                        <option value="Features">Features</option>
+                        <option value="CRM">CRM</option>
+                        <option value="Accounting">Accounting</option>
+                        <option value="Inventory">Inventory</option>
+                        <option value="Payroll">Payroll</option>
+                        <option value="Projects">Projects</option>
+                        <option value="Support">Support</option>
+                        <option value="Payments">Payments</option>
+                        <option value="Security">Security</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">App Source</label>
+                    <select class="form-select" id="qaApp">
+                        <option value="nexora_business">Nexora Business</option>
+                        <option value="nexora_investments">Nexora Investments</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Keywords (comma-separated)</label>
+                    <input type="text" class="form-control" id="qaKeywords" placeholder="e.g. invoice, billing, payment">
+                </div>
+                <button class="btn btn-success" onclick="saveQA()"><i class="fas fa-save"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+function loadKB() {
+    axios.get('/api/knowledge-base')
+        .then(res => {
+            const html = res.data.knowledge_base.map(q => `
+                <tr>
+                    <td>${q.question}</td>
+                    <td><span class="badge bg-info">${q.category}</span></td>
+                    <td>${q.app_source}</td>
+                    <td>${(q.confidence_score * 100).toFixed(0)}%</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewAnswer(${q.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteQA(${q.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('kbTable').innerHTML = html;
+        });
+}
+
+function saveQA() {
+    const qa = {
+        question: document.getElementById('qaQuestion').value,
+        answer: document.getElementById('qaAnswer').value,
+        category: document.getElementById('qaCategory').value,
+        app_source: document.getElementById('qaApp').value,
+        keywords: document.getElementById('qaKeywords').value
+    };
+    
+    axios.post('/api/knowledge-base', qa)
+        .then(res => {
+            alert('Q&A added successfully!');
+            loadKB();
+            document.getElementById('newQAModal').close();
+        });
+}
+
+function viewAnswer(id) {
+    axios.get(`/api/knowledge-base/${id}`)
+        .then(res => {
+            const q = res.data;
+            alert(`Q: ${q.question}\n\nA: ${q.answer}`);
+        });
+}
+
+function deleteQA(id) {
+    if(confirm('Delete this Q&A?')) {
+        axios.delete(`/api/knowledge-base/${id}`)
+            .then(() => {
+                alert('Deleted!');
+                loadKB();
+            });
+    }
+}
+
+function filterByCategory() {
+    const cat = document.getElementById('categoryFilter').value;
+    if(!cat) {
+        loadKB();
+        return;
+    }
+    
+    axios.get(`/api/knowledge-base?category=${cat}`)
+        .then(res => {
+            const html = res.data.knowledge_base.map(q => `
+                <tr>
+                    <td>${q.question}</td>
+                    <td><span class="badge bg-info">${q.category}</span></td>
+                    <td>${q.app_source}</td>
+                    <td>${(q.confidence_score * 100).toFixed(0)}%</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewAnswer(${q.id})"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteQA(${q.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('kbTable').innerHTML = html;
+        });
+}
+
+document.getElementById('searchKB').addEventListener('keyup', (e) => {
+    const q = e.target.value;
+    if(q.length > 2) {
+        axios.get(`/api/knowledge-base/search?q=${q}`)
+            .then(res => {
+                const html = res.data.results.map(qa => `
+                    <tr>
+                        <td>${qa.question}</td>
+                        <td><span class="badge bg-info">${qa.category}</span></td>
+                        <td>${qa.app_source}</td>
+                        <td>${(qa.confidence_score * 100).toFixed(0)}%</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="viewAnswer(${qa.id})"><i class="fas fa-eye"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteQA(${qa.id})"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+                document.getElementById('kbTable').innerHTML = html;
+            });
+    }
+});
+
+loadKB();
+</script>
+{% endblock %}

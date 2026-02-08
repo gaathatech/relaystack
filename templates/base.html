@@ -1,127 +1,189 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}RelayStack{% endblock %}</title>
-  <meta name="description" content="WhatsApp automation platform with QR login and message relay.">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/png">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Nexora - WhatsApp Marketing & AI Chatbot{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #4caf50;
+            --danger: #f44336;
+            --warning: #ff9800;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .container-main {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            margin: 30px auto;
+            padding: 40px;
+            max-width: 1200px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-radius: 8px 8px 0 0 !important;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            border: none;
+            box-shadow: 0 2px 8x rgba(0,0,0,0.1);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 10px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .badge {
+            padding: 0.5rem 0.75rem;
+            border-radius: 4px;
+        }
+        
+        .table-hover tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            margin-top: 40px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container-main {
+                margin: 15px auto;
+                padding: 20px;
+            }
+            
+            .page-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <!-- Header -->
-  <header class="header-top">
-    <div class="container-fluid">
-      <div class="row align-items-center">
-        <div class="col-md-6">
-          <div class="header-brand">
-            <img src="{{ url_for('static', filename='logo.png') }}" alt="RelayStack">
-            <div>
-              <div>RelayStack</div>
-              <span>WhatsApp Automation</span>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-comments"></i> Nexora
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/chatbot"><i class="fas fa-robot"></i> Chatbot</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contacts"><i class="fas fa-address-book"></i> Contacts</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/campaigns"><i class="fas fa-envelope"></i> Campaigns</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/analytics"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/knowledge-base"><i class="fas fa-book"></i> Q&A</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/health" title="Health Check">
+                            <i class="fas fa-heartbeat" style="color: var(--success);"></i>
+                        </a>
+                    </li>
+                </ul>
             </div>
-          </div>
         </div>
-        <div class="col-md-6 text-end">
-          {% if session.get('user') %}
-            <small style="color: rgba(255,255,255,0.8);">
-              <i class="bi bi-person-circle"></i>
-              Logged in as: <strong>{{ session.get('user') }}</strong>
-            </small>
-          {% endif %}
-        </div>
-      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        {% block content %}{% endblock %}
     </div>
-  </header>
-  <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-    <div class="container-fluid">
-      <a class="navbar-brand d-lg-none" href="/">
-        <i class="bi bi-app-indicator"></i> RelayStack
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
-          {% if session.get('user') %}
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}"><i class="bi bi-house"></i> Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('accounts_list') }}"><i class="bi bi-chat-dots"></i> Accounts</a></li>
-            {% if session.get('user') == 'admin' %}
-              <li class="nav-item"><a class="nav-link" href="{{ url_for('admin') }}"><i class="bi bi-shield-lock"></i> Admin</a></li>
-            {% endif %}
-            <li class="nav-item dropdown ms-2">
-              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                <i class="bi bi-person-circle"></i> Settings
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
-              </ul>
-            </li>
-          {% else %}
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('signup') }}"><i class="bi bi-person-plus"></i> Sign up</a></li>
-          {% endif %}
-        </ul>
-      </div>
-    </div>
-  </nav>
-  <!-- Main Content -->
-  <div class="main-content">
-    <div class="container">
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-              <i class="bi bi-exclamation-circle"></i> {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
-      {% block content %}{% endblock %}
-    </div>
-  </div>
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <div class="row">
-        <div class="col-md-4 footer-section">
-          <h6>About RelayStack</h6>
-          <p>
-            RelayStack is a WhatsApp automation platform for sending messages and managing accounts with QR-based login.
-          </p>
-          <p><strong>Version:</strong> 1.0</p>
-        </div>
-        <div class="col-md-4 footer-section">
-          <h6>Project</h6>
-          <p>
-            Open-source WhatsApp automation tool.<br>
-            Built with Flask and Selenium.
-          </p>
-        </div>
-        <div class="col-md-4 footer-section">
-          <h6>Contact & Support</h6>
-          <p>
-            <i class="bi bi-envelope"></i>
-            <a href="mailto:support@relaystack.com">support@relaystack.com</a>
-          </p>
-          <p>
-            <i class="bi bi-github"></i>
-            Support via GitHub issues
-          </p>
-        </div>
-      </div>
-      <div class="footer-divider"></div>
-      <div class="copyright">
-        <p>&copy; 2025 RelayStack. All rights reserved.</p>
-        <p style="margin-top: 8px; font-size: 11px;">RelayStack | WhatsApp Automation Platform</p>
-      </div>
-    </div>
-  </footer>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  {% block scripts %}{% endblock %}
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2026 Nexora Platform. WhatsApp Marketing & AI Chatbot Solution.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

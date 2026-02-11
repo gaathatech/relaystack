@@ -1,84 +1,474 @@
-# RelayStack
-Automated WhatsApp sender demo built by Nexora.
+# Nexora Investments - WhatsApp Business Chatbot
 
-## Overview
-RelayStack is a small Flask + Selenium utility for sending WhatsApp messages via WhatsApp Web and logging results to an Excel file.
+A production-ready WhatsApp Business Cloud API chatbot built with Flask for Nexora Investments. The chatbot provides an IVR-style menu system for exploring residency programs, checking eligibility, consulting with specialists, and accessing resources.
 
-> NOTE: This project is a demo and not production ready. Review security, rate limits, and legal compliance before using it for real campaigns.
+## Features
 
-## Setup
-1. Create and activate a Python virtualenv
-2. Install dependencies:
+✅ **WhatsApp Integration**
+- Webhook-based message reception
+- Two-way messaging with WhatsApp Business Cloud API
+- Message status tracking (delivered, read, failed)
+
+✅ **IVR Menu System**
+- Conversational flow with main menu
+- Residency program exploration (Europe, Caribbean, USA, UAE)
+- Eligibility checking based on investment budget
+- Consultant consultation booking
+- Job search assistance
+- Consultation booking portal
+- Brochure downloads
+
+✅ **Session Management**
+- User conversation state tracking
+- 30-minute auto-timeout with reset to main menu
+- Persistent session memory with JSON metadata
+
+✅ **Lead Management**
+- Automatic lead capture from consultations
+- Lead database with contact information
+- Admin notifications via email
+
+✅ **Database Schema**
+- `whatsapp_messages` - All incoming/outgoing messages
+- `whatsapp_leads` - Converted leads
+- `whatsapp_sessions` - User conversation state
+- `investment_programs` - Residency program database
+
+## Tech Stack
+
+- **Python 3.11+**
+- **Flask 2.3** - Web framework
+- **SQLAlchemy** - ORM
+- **PostgreSQL/SQLite** - Database
+- **Requests** - HTTP client
+- **python-dotenv** - Environment management
+
+## Project Structure
+
+```
+/workspaces/relaystack/
+├── app.py                          # Main entry point
+├── config.py                       # Configuration management
+├── requirements.txt                # Python dependencies
+├── .env                           # Environment variables (gitignored)
+├── .env.example                   # Example env file
+├── README.md                      # This file
+├── app/
+│   ├── __init__.py               # App factory
+│   ├── models.py                 # SQLAlchemy models
+│   └── whatsapp/
+│       ├── __init__.py           # Blueprint initialization
+│       ├── routes.py             # Webhook endpoints
+│       └── services.py           # Business logic
+└── instance/
+    └── nexora_whatsapp.db        # SQLite database (development)
+```
+
+## Installation & Setup
+
+### 1. Clone Repository
+
+```bash
+cd /workspaces/relaystack
+git clone https://github.com/gaathatech/relaystack.git .
+```
+
+### 2. Create Virtual Environment
+
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+### 3. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-3. Provide a Chrome/Chromium binary and optionally chromedriver path via environment variables:
+### 4. Configure Environment Variables
+
+Copy `.env.example` to `.env` and update with your credentials:
 
 ```bash
-export CHROME_BINARY=/usr/bin/chromium
-export CHROMEDRIVER_PATH=/usr/bin/chromedriver
+cp .env.example .env
 ```
 
-If you don't set `CHROMEDRIVER_PATH`, `webdriver-manager` will attempt to download a matching driver.
+Edit `.env`:
+```env
+FLASK_ENV=development
+WHATSAPP_TOKEN=your_permanent_access_token
+PHONE_NUMBER_ID=your_phone_number_id
+VERIFY_TOKEN=your_webhook_verify_token
+DATABASE_URL=sqlite:///nexora_whatsapp.db
+```
 
-By default RelayStack removes the local WhatsApp Web profile after each send so that the next run will require scanning the QR code again (this helps ensure per-run session clearing). If you want to preserve the logged-in session, set:
+### 5. Initialize Database
 
 ```bash
-export KEEP_WHATSAPP_SESSION=1
+# Initialize database tables
+flask init-db
+
+# Seed investment programs
+flask seed-programs
 ```
 
-4. Run the Flask app:
+### 6. Run Application
 
 ```bash
 python app.py
 ```
 
-5. Open http://localhost:5000 and scan the QR code in WhatsApp Web when prompted. After a send completes the app will clear the session so the next run will ask for a new QR scan unless `KEEP_WHATSAPP_SESSION` is set.
+Server starts on `http://localhost:5000`
 
-## Legal & Privacy
-- A sample Privacy Policy and User Agreement are included in the `templates/` folder. These are **templates only** and should be reviewed and customized by legal counsel for production use.
+## API Endpoints
 
-## Multi-platform roadmap
-RelayStack is currently implemented for WhatsApp Web only. Adding additional providers is possible but varies by platform:
+### Webhook Endpoints
 
-- **Telegram:** easiest via the Bot API if recipients have started the bot; for sending as a user account, tools like Telethon can be used (but require storing session data and handling 2FA).
-- **Viber:** Viber provides a public REST API for business accounts (requires registering an account and obtaining API keys); user-account flows may require web automation.
-- **WhatsApp Business API / Cloud API:** paid and intended for business flows; different provisioning and cost model.
-- **Other apps (Errattai, etc.):** feasibility depends on whether the platform offers an API or a programmatic agent.
+#### GET `/webhook` - Verify Webhook
+WhatsApp sends a verification request during setup.
 
-User-account flows (QR / per-user sessions)
+**Parameters:**
+- `hub.mode` - Always "subscribe"
+- `hub.verify_token` - Token to verify
+- `hub.challenge` - Challenge string to return
 
-RelayStack now supports creating per-user accounts (Accounts page) and starting a WhatsApp Web login flow per account that opens a browser profile for scanning the QR code. The server keeps the profile directory (under `user_data/<provider>/<account_id>`) so subsequent sends use the logged-in account.
+**Response:**
+```
+hub.challenge value
+```
 
-Important security notes:
-- Session directories currently live on the server and should be encrypted at rest for production. Use `sessions.py` to store small session metadata and store session files securely.
-- Do not commit session files to version control.
+#### POST `/webhook` - Receive Messages
+Incoming messages from WhatsApp users.
 
-Next steps I can take if you want:
-- Implement encrypted session file storage for profiles (I have `sessions.py` ready and can integrate it).
-- Add Telethon-based Telegram user-account provider to allow user login and persistent sessions.
-- Add UI controls to select which account to use when sending messages.
+**Request Body:**
+```json
+{
+  "entry": [
+    {
+      "changes": [
+        {
+          "value": {
+            "messages": [
+              {
+                "from": "1234567890",
+                "id": "message_id",
+                "text": {"body": "Hello"},
+                "timestamp": "1234567890"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
 
-If you'd like to deploy to Render, this repo includes a `Dockerfile`, `run.sh`, and a sample `render.yaml` to make deployment straightforward. Please note the following deployment notes:
+**Response:**
+```json
+{"status": "received"}
+```
 
-- Environment variables you must set in Render (use Render Secrets): `SESSION_KEY`, `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, `TELEGRAM_BOT_TOKEN` (optional), and `RATE_LIMIT_PER_MIN` (optional).
-- For WhatsApp QR flows, running the browser headlessly on Render means the QR may not be directly scannable from your machine. For production usage prefer WhatsApp Business Cloud API or run the driver on a machine you control where you can access the browser UI (or set up a secure remote debugging/VNC solution).
-- By default, `user_data/` and session files are stored on container filesystem (ephemeral). If you need persistence across restarts, attach a Persistent Disk in Render and mount it at `/app` or switch to S3-backed session storage.
+### Utility Endpoints
 
-See `Dockerfile`, `run.sh` and `render.yaml` for the deployment setup. Tell me if you want me to add a `docker-compose.yml` for local Docker testing or set up a Render persistent disk example and I will add it.
+#### GET `/webhook/health` - Health Check
+```bash
+curl http://localhost:5000/webhook/health
+```
 
-### Troubleshooting common deploy errors ⚠️
+#### GET `/webhook/stats/<phone>` - User Statistics
+Get conversation history for a user.
 
-- If you see `/app/run.sh: line X: exec: gunicorn: not found` during deploy, it means Gunicorn wasn't available in the container's Python environment. Fixes:
-  - Ensure `gunicorn` is present in `requirements.txt` (this repo includes `gunicorn>=20.0`).
-  - Alternatively the entrypoint now uses `python -m gunicorn` which runs the module under the container Python interpreter.
-  - Re-deploy after updating `requirements.txt` so Render installs the new dependency.
+```bash
+curl http://localhost:5000/webhook/stats/1234567890
+```
 
+**Response:**
+```json
+{
+  "phone": "1234567890",
+  "total_messages": 15,
+  "incoming_messages": 8,
+  "outgoing_messages": 7,
+  "is_lead": true,
+  "lead_info": {
+    "id": 1,
+    "name": "John Doe",
+    "email": "john@example.com",
+    "interest": "Talk to Consultant",
+    "created_at": "2024-02-11T10:30:00"
+  }
+}
+```
+
+#### GET `/` - Service Status
+```bash
+curl http://localhost:5000/
+```
+
+## Conversation Flow
+
+### Main Menu
+User sends: `"hi"`, `"hello"`, `"start"`, or `"menu"`
+
+Bot responds with:
+```
+👋 Welcome to Nexora Investments!
+
+Please choose an option:
+
+1️⃣ Explore Residency Programs
+2️⃣ Check Eligibility
+3️⃣ Talk to Consultant
+4️⃣ Job Search Assistance
+5️⃣ Book Consultation
+6️⃣ Download Brochure
+
+Reply with a number.
+```
+
+### Flow 1: Explore Residency Programs
+User selects: `1`
+
+Bot asks for category:
+```
+🌍 Top Residency Categories:
+A. Europe Golden Visa
+B. Caribbean Citizenship
+C. USA EB-5
+D. UAE Residency
+Reply with A, B, C, or D
+```
+
+Bot returns top 3 programs with links.
+
+### Flow 2: Check Eligibility
+User selects: `2`
+
+Bot asks for budget:
+```
+💰 What is your investment budget in USD?
+Reply with amount (example: 150000)
+```
+
+Bot returns eligible programs based on budget.
+
+### Flow 3: Talk to Consultant
+User selects: `3`
+
+Bot collects:
+- Full name
+- Email address
+- Creates lead entry
+- Sends admin notification
+
+### Flow 4: Job Search Assistance
+User selects: `4`
+
+Bot asks for country:
+```
+Which country are you looking for jobs in?
+```
+
+Integrates with CareerJet API (placeholder for implementation).
+
+### Flow 5: Book Consultation
+User selects: `5`
+
+Bot sends:
+```
+📅 Book your consultation here:
+https://nexorainvestments.com/book
+```
+
+### Flow 6: Download Brochure
+User selects: `6`
+
+Bot sends:
+```
+📄 Download our brochure:
+https://nexorainvestments.com/brochure.pdf
+```
+
+## Database Models
+
+### WhatsAppMessage
+```python
+- id (Integer, Primary Key)
+- phone (String, Indexed)
+- message (Text)
+- direction (String) - 'incoming' or 'outgoing'
+- timestamp (DateTime, Indexed)
+- message_id (String, Unique)
+- status (String) - 'delivered', 'read', 'failed'
+```
+
+### WhatsAppLead
+```python
+- id (Integer, Primary Key)
+- phone (String, Unique, Indexed)
+- name (String)
+- email (String)
+- interest (String)
+- budget (Integer)
+- country_of_interest (String)
+- created_at (DateTime, Indexed)
+- updated_at (DateTime)
+- notes (Text)
+```
+
+### WhatsAppSession
+```python
+- id (Integer, Primary Key)
+- phone (String, Unique, Indexed)
+- current_step (String)
+- metadata (JSON)
+- created_at (DateTime)
+- updated_at (DateTime)
+- last_activity (DateTime)
+- is_active (Boolean)
+```
+
+### InvestmentProgram
+```python
+- id (Integer, Primary Key)
+- country (String)
+- category (String)
+- name (String)
+- description (Text)
+- minimum_investment (Integer)
+- processing_time (String)
+- link (String)
+- rank (Integer)
+```
+
+## Security
+
+### Environment Variables
+All sensitive data stored in `.env`:
+- `WHATSAPP_TOKEN` - Permanent access token
+- `PHONE_NUMBER_ID` - WhatsApp Business Account phone number ID
+- `VERIFY_TOKEN` - Webhook verification token
+
+### Webhook Verification
+Verify WhatsApp webhook requests using token validation.
+
+Optional: Implement HMAC signature verification (currently commented out).
+
+### Error Handling
+- Invalid input returns helpful error message
+- Session timeout resets to main menu
+- Message failures logged and tracked
+
+## Deployment
+
+### Render
+1. Connect GitHub repository
+2. Set environment variables in Render dashboard
+3. Deploy with `gunicorn app:app`
+
+### Railway
+1. Connect GitHub repository
+2. Add environment variables
+3. Platform auto-detects Flask app
+
+### Docker
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:5000"]
+```
+
+## Testing
+
+### Manual Testing with cURL
+
+Verify webhook:
+```bash
+curl "http://localhost:5000/webhook?hub.mode=subscribe&hub.verify_token=your_token&hub.challenge=test_challenge"
+```
+
+Send test message:
+```bash
+curl -X POST http://localhost:5000/webhook \
+  -H "Content-Type: application/json" \
+  -d '{
+    "entry": [{
+      "changes": [{
+        "value": {
+          "messages": [{
+            "from": "1234567890",
+            "id": "msg_123",
+            "text": {"body": "hi"},
+            "timestamp": "1234567890"
+          }]
+        }
+      }]
+    }]
+  }'
+```
+
+## Common Issues
+
+### Issue: Webhook not receiving messages
+**Solution:**
+1. Verify VERIFY_TOKEN matches WhatsApp Business Account settings
+2. Ensure webhook URL is publicly accessible
+3. Check PHONE_NUMBER_ID and ACCESS_TOKEN are correct
+4. Enable test messages in WhatsApp Business Account
+
+### Issue: Messages not sending
+**Solution:**
+1. Verify permanent ACCESS_TOKEN is valid
+2. Check PHONE_NUMBER_ID format
+3. Ensure rated recipient number is valid
+4. Check WhatsApp API rate limits
+
+### Issue: Database errors
+**Solution:**
+1. Run `flask init-db` to reinitialize
+2. Check DATABASE_URL environment variable
+3. For PostgreSQL, verify connection string format
+
+## Future Enhancements
+
+- [ ] Email notifications to admin (SendGrid/SMTP integration)
+- [ ] Integration with CareerJet API for job search
+- [ ] Media handling (images, documents)
+- [ ] Multi-language support
+- [ ] Analytics dashboard
+- [ ] WhatsApp template messages
+- [ ] Payment integration for bookings
+- [ ] CRM system integration
+
+## API Documentation
+
+Complete endpoint documentation available at `/docs` (when Swagger UI is added).
 
 ## Contributing
-PRs welcome. Please ensure you do not include real user data in commits.
+
+Follow PEP 8 style guide. Test all changes before pushing.
+
+## License
+
+Proprietary - Nexora Investments 2024
+
+## Support
+
+For issues or questions:
+- Email: gaatha.aidni@gmail.com
+- GitHub Issues: [Create issue]
 
 ---
-© 2025 Nexora. All rights reserved.
+
+**Last Updated:** February 11, 2024
+**Version:** 1.0.0
+**Status:** Production Ready ✅

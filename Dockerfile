@@ -1,33 +1,40 @@
-FROM python:3.12-slim
+FROM python:3.11-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install system deps including Google Chrome
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget ca-certificates gnupg unzip curl xz-utils \
-  && wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
-  && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-  && apt-get update && apt-get install -y google-chrome-stable \
-  && rm -rf /var/lib/apt/lists/*
-
-# Set Chrome paths used by the app
-ENV CHROME_BINARY=/usr/bin/google-chrome
-
-# Install python deps
+# Set working directory
 WORKDIR /app
-COPY requirements.txt ./
-RUN python -m pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
 
-# Copy app
-COPY . /app
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
 
-# Ensure sessions and logs directories exist
-RUN mkdir -p /app/static/logs /app/user_data /app/sessions
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
 
-# Expose port (Render will provide via $PORT env)
+# Copy requirements
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# Copy application
+COPY . .
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && \
+    chown -R appuser:appuser /app
+USER appuser
+
+# Expose port
 EXPOSE 5000
 
-# Start command uses $PORT if provided by environment
-COPY run.sh /app/run.sh
-RUN chmod +x /app/run.sh
-CMD ["/app/run.sh"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:5000/health', timeout=5)"
+
+# Run application
+CMD ["gunicorn", "wsgi:app", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120"]

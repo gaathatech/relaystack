@@ -24,18 +24,19 @@ services:
     environment:
       FLASK_ENV: development
       FLASK_DEBUG: "True"
+      PORT: "8000"
       DATABASE_URL: postgresql://nexora:nexora_dev_password@postgres:5432/nexora_whatsapp
       WHATSAPP_TOKEN: ${WHATSAPP_TOKEN:-default_token}
       PHONE_NUMBER_ID: ${PHONE_NUMBER_ID:-default_id}
       VERIFY_TOKEN: ${VERIFY_TOKEN:-default_verify_token}
     ports:
-      - "5000:5000"
+      - "8000:8000"
     volumes:
       - .:/app
     depends_on:
       postgres:
         condition: service_healthy
-    command: flask run --host=0.0.0.0
+    command: flask run --host=0.0.0.0 --port=8000
 
 volumes:
   postgres_data:

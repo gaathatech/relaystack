@@ -13,28 +13,6 @@ load_dotenv()
 # Create Flask application
 app = create_app()
 
-@app.route('/', methods=['GET'])
-def index():
-    """Health check endpoint"""
-    return {
-        'status': 'running',
-        'service': 'Nexora WhatsApp Chatbot',
-        'version': '1.0.0',
-        'endpoints': {
-            'webhook': '/webhook',
-            'health': '/webhook/health',
-            'stats': '/webhook/stats/<phone>'
-        }
-    }, 200
-
-@app.route('/health', methods=['GET'])
-def health():
-    """Health check endpoint"""
-    return {
-        'status': 'healthy',
-        'service': 'Nexora WhatsApp Chatbot'
-    }, 200
-
 if __name__ == '__main__':
     # Get debug mode from environment
     debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'

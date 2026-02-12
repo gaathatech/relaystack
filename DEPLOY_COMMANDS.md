@@ -24,7 +24,9 @@ DATABASE_URL=sqlite:///nexora_whatsapp.db
 ```bash
 # update & install
 pkg update && pkg upgrade -y
-pkg install python git wget unzip -y
+# include a C toolchain — some Python packages need a compiler and headers
+# install `clang`, `make`, and `pkg-config` so wheels with native extensions can build
+pkg install python git wget unzip clang make pkg-config -y
 
 # clone project (or copy files into Termux home)
 git clone <your-repo-url> relaystack
@@ -147,7 +149,7 @@ curl "https://graph.facebook.com/v18.0/me/accounts?access_token=${WHATSAPP_TOKEN
 Create a simple script `start_termux.sh` to activate venv, run app, and start ngrok (if you have it):
 
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 source venv/bin/activate
 export PORT=${PORT:-8000}

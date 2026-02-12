@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 # start_termux.sh — helper to run the app and ngrok on Termux

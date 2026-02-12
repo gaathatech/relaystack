@@ -121,6 +121,10 @@ python app.py
 
 Server starts on `http://localhost:5000`
 
+### Termux / Android
+
+For running the project on an Android device with Termux, follow the concise checklist: [Termux Quick Checklist](TERMUX_CHECKLIST.md)
+
 ## API Endpoints
 
 ### Webhook Endpoints

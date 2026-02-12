@@ -13,6 +13,11 @@ load_dotenv()
 # Create Flask application
 app = create_app()
 
+# Ensure database is initialized
+with app.app_context():
+    from app.models import db
+    db.create_all()
+
 if __name__ == '__main__':
     # Get debug mode from environment
     debug = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'

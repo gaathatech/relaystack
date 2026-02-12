@@ -2,7 +2,8 @@
 
 from flask import Flask
 from config import config
-from app.models import db
+from app.models import db, WhatsAppMessage, WhatsAppSession, WhatsAppLead, InvestmentProgram
+from sqlalchemy import text
 import os
 
 def create_app(config_name=None):

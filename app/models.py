@@ -69,7 +69,7 @@ class WhatsAppSession(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     phone = db.Column(db.String(20), nullable=False, unique=True, index=True)
     current_step = db.Column(db.String(100), default='main_menu')  # Current conversation step
-    metadata = db.Column(db.JSON, default={})  # Store conversation context
+    session_metadata = db.Column(db.JSON, default={})  # Store conversation context
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     last_activity = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -80,22 +80,22 @@ class WhatsAppSession(db.Model):
     
     def update_metadata(self, key, value):
         """Update session metadata"""
-        if not self.metadata:
-            self.metadata = {}
-        self.metadata[key] = value
+        if not self.session_metadata:
+            self.session_metadata = {}
+        self.session_metadata[key] = value
         self.updated_at = datetime.utcnow()
     
     def get_metadata(self, key, default=None):
         """Get value from session metadata"""
-        if not self.metadata:
+        if not self.session_metadata:
             return default
-        return self.metadata.get(key, default)
+        return self.session_metadata.get(key, default)
     
     def to_dict(self):
         return {
             'phone': self.phone,
             'current_step': self.current_step,
-            'metadata': self.metadata,
+            'metadata': self.session_metadata,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }

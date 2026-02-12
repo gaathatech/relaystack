@@ -26,6 +26,18 @@ def create_app(config_name=None):
     # Register blueprints
     from app.whatsapp import whatsapp_bp
     app.register_blueprint(whatsapp_bp)
+
+    # Basic root endpoints (useful for tests and health checks)
+    @app.route('/', methods=['GET'])
+    def index():
+        return {
+            'status': 'running',
+            'service': 'Nexora WhatsApp Chatbot'
+        }, 200
+
+    @app.route('/status', methods=['GET'])
+    def status():
+        return {'status': 'running'}, 200
     
     # Create database tables
     with app.app_context():

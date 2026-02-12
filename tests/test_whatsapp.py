@@ -85,7 +85,7 @@ def test_session_creation(app_context):
     
     assert session.phone == phone
     assert session.current_step == 'main_menu'
-    assert session.metadata == {}
+    assert session.session_metadata == {}
 
 def test_session_retrieval(app_context):
     """Test retrieving existing session"""
@@ -93,14 +93,14 @@ def test_session_retrieval(app_context):
     
     # Create session
     session1 = WhatsAppService.get_or_create_session(phone)
-    session1.metadata = {'test': 'data'}
+    session1.session_metadata = {'test': 'data'}
     db.session.commit()
     
     # Retrieve session
     session2 = WhatsAppService.get_or_create_session(phone)
     
     assert session1.id == session2.id
-    assert session2.metadata.get('test') == 'data'
+    assert session2.session_metadata.get('test') == 'data'
 
 def test_process_message_main_menu(app_context):
     """Test main menu message processing"""

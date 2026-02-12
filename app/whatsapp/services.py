@@ -152,7 +152,7 @@ Or text 'back' to return to main menu."""
         session = WhatsAppSession.query.filter_by(phone=phone).first()
         if session:
             session.current_step = 'main_menu'
-            session.metadata = {}
+            session.session_metadata = {}
             session.last_activity = datetime.utcnow()
             db.session.commit()
 
@@ -192,9 +192,9 @@ Or text 'back' to return to main menu."""
         user_input = message_text.strip().lower()
         
         # Keywords to start/reset menu
-        if user_input in ['hi', 'hello', 'start', 'menu', 'back'] or session.current_step == 'main_menu':
+        if user_input in ['hi', 'hello', 'start', 'menu', 'back']:
             session.current_step = 'main_menu'
-            session.metadata = {}
+            session.session_metadata = {}
             db.session.commit()
             return WhatsAppService.MAIN_MENU
         
@@ -225,25 +225,25 @@ Or text 'back' to return to main menu."""
         """Handle main menu selection"""
         if user_input == '1':
             session.current_step = 'residency_categories'
-            session.metadata = {'selected_option': '1'}
+            session.session_metadata = {'selected_option': '1'}
             db.session.commit()
             return WhatsAppService.RESIDENCY_CATEGORIES
         
         elif user_input == '2':
             session.current_step = 'budget_input'
-            session.metadata = {'selected_option': '2'}
+            session.session_metadata = {'selected_option': '2'}
             db.session.commit()
             return WhatsAppService.BUDGET_QUESTION
         
         elif user_input == '3':
             session.current_step = 'consultant_name'
-            session.metadata = {'selected_option': '3'}
+            session.session_metadata = {'selected_option': '3'}
             db.session.commit()
             return WhatsAppService.CONSULTANT_REQUEST
         
         elif user_input == '4':
             session.current_step = 'job_country'
-            session.metadata = {'selected_option': '4'}
+            session.session_metadata = {'selected_option': '4'}
             db.session.commit()
             return WhatsAppService.JOB_COUNTRY_QUESTION
         
@@ -272,7 +272,7 @@ Or text 'back' to return to main menu."""
             return WhatsAppService.RESIDENCY_CATEGORIES
         
         category = category_map[user_input]
-        session.metadata['selected_category'] = category
+        session.session_metadata['selected_category'] = category
         db.session.commit()
         
         # Get top 3 programs for this category
@@ -302,8 +302,7 @@ Or text 'back' to return to main menu."""
             
             if budget <= 0:
                 return "Please enter a valid amount. " + WhatsAppService.BUDGET_QUESTION
-            
-            session.metadata['budget'] = budget
+            session.session_metadata['budget'] = budget
             db.session.commit()
             
             # Run eligibility check
@@ -339,8 +338,7 @@ Or text 'back' to return to main menu."""
         """Handle consultant name input"""
         if len(user_input.strip()) < 2:
             return "Please provide a valid name."
-        
-        session.metadata['name'] = user_input.strip()
+        session.session_metadata['name'] = user_input.strip()
         session.current_step = 'consultant_email'
         db.session.commit()
         
@@ -352,8 +350,7 @@ Or text 'back' to return to main menu."""
         # Basic email validation
         if '@' not in user_input or '.' not in user_input:
             return "Please provide a valid email address."
-        
-        name = session.metadata.get('name', 'Unknown')
+        name = session.session_metadata.get('name', 'Unknown')
         email = user_input.strip()
         
         # Create or update lead
@@ -374,7 +371,7 @@ Or text 'back' to return to main menu."""
         
         # Reset session
         session.current_step = 'main_menu'
-        session.metadata = {}
+        session.session_metadata = {}
         db.session.commit()
         
         return """✅ Thank you! A consultant will contact you shortly.
@@ -387,7 +384,7 @@ Is there anything else I can help with? Reply 'back' for main menu."""
         country = user_input.strip()
         
         # Store in session metadata
-        session.metadata['job_country'] = country
+        session.session_metadata['job_country'] = country
         db.session.commit()
         
         # Placeholder for CareerJet API integration
